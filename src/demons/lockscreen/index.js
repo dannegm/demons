@@ -5,6 +5,7 @@ const IS_DEV = process.env.NODE_ENV !== 'production';
 
 export const lockscreen = () => {
     consola.log('Pantalla bloqueada.');
+    console.log(process.env.NODE_ENV);
     if (IS_DEV) {
         return;
     }
