@@ -1,6 +1,7 @@
 # dependencies
 ######################
 /node_modules
+src/flags.local.js
 
 # Keep environment variables out of version control
 ######################

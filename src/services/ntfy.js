@@ -1,6 +1,8 @@
 import axios from 'axios';
 import EventSource from 'eventsource';
-import { consola } from 'consola';
+import { buildCustomLogger } from '@/services/logger';
+
+const logger = buildCustomLogger('ntfy');
 
 const APP_TOPIC = process.env.APP_TOPIC;
 
@@ -14,23 +16,28 @@ class Ntfy {
     }
 
     async push({ title, message, tags }) {
-        consola.info('Start sending');
+        logger.debug(`Sending: ${title}`);
         try {
+            const title = title || 'DNN Demons';
             await axios.post(this.ntfyUrl, message, {
                 headers: {
-                    Title: title || 'DNN Demons',
+                    Title: title,
                     Tags: tags || 'white_circle',
                     Markdown: 'yes',
                 },
             });
-            consola.success('Notification sent');
+            logger.success(`Sent: ${title} | ${message}`);
         } catch (err) {
-            consola.error('Error sending notification', err);
+            logger.error('Error sending notification', err);
         }
     }
 
     onMessage(handler) {
-        this.EventSource.addEventListener('message', handler);
+        this.EventSource.addEventListener('message', event => {
+            const data = JSON.parse(event.data);
+            logger.info(`Received: ${data.title} | ${data.message}`);
+            handler(event);
+        });
     }
 }
 

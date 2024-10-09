@@ -1,9 +1,11 @@
-import { logger } from '@/services/logger';
 import { exec } from 'child_process';
+import { buildCustomLogger } from '@/services/logger';
+import { buildHandler } from '@/helpers/builders';
 
-const IS_DEV = process.env.NODE_ENV !== 'production';
+const IS_DEV = process.env.NODE_ENV === 'development';
 const ENV_NAME = process.env.ENV_NAME;
-const LOGGER_TAG = 'LOCKSCREEN';
+const FEATURE_KEY = 'command.lockscreen';
+const logger = buildCustomLogger('lockscreen');
 
 const lock = () => {
     if (IS_DEV) {
@@ -16,23 +18,23 @@ const lock = () => {
             if (error) {
                 logger.error(`Error locking the screen: ${error.message}`);
             } else {
-                logger.command(LOGGER_TAG, 'Screen locked');
+                logger.success('Screen locked');
             }
         },
     );
 };
 
-export const lockscreen = (env = 'all') => {
-    logger.command(LOGGER_TAG, 'Locking screen');
-    logger.command(LOGGER_TAG, 'Env', env);
+export const lockscreen = buildHandler(FEATURE_KEY, (env = 'all') => {
+    logger.info('Locking screen');
+    logger.verbose('Env', env);
 
     if (env === 'all') {
-        logger.command(LOGGER_TAG, 'Locking all computers');
+        logger.info('Locking all computers');
         return lock();
     }
 
     if (env === ENV_NAME) {
-        logger.command(LOGGER_TAG, `Locking ${env}`);
+        logger.info(`Locking ${env}`);
         return lock();
     }
-};
+});

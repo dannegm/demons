@@ -1,10 +1,12 @@
 import { exec } from 'child_process';
 import EventEmitter from 'events';
 import ntfy from '@/services/ntfy';
-import { logger } from '@/services/logger';
+import { buildCustomLogger } from '@/services/logger';
+import { buildRunner } from '@/helpers/builders';
 
 const ENV_NAME = process.env.ENV_NAME;
-const LOGGER_TAG = 'ENERGY';
+const FEATURE_KEY = 'demon.energy';
+const logger = buildCustomLogger('energy');
 
 export const powerStatusEmitter = new EventEmitter();
 
@@ -14,11 +16,11 @@ const checkPowerStatus = () => {
     return new Promise((resolve, reject) => {
         exec('pmset -g batt', (error, stdout, stderr) => {
             if (error) {
-                logger.error(LOGGER_TAG, error.message);
+                logger.error(error.message);
                 return reject(error);
             }
             if (stderr) {
-                logger.error(LOGGER_TAG, `Stderr: ${stderr}`);
+                logger.error(`Stderr: ${stderr}`);
                 return reject(stderr);
             }
 
@@ -39,14 +41,14 @@ const monitorPowerStatus = async () => {
 
 powerStatusEmitter.on('status:change', async ({ status }) => {
     if (status) {
-        logger.demon(LOGGER_TAG, 'Power connected.');
+        logger.info('Power connected.');
         await ntfy.push({
             tags: 'battery,green_circle',
             title: `${ENV_NAME} Power`,
             message: 'Macbook conectada a la corriente elétrica',
         });
     } else {
-        logger.demon(LOGGER_TAG, 'Power disconnected.');
+        logger.info('Power disconnected.');
         await ntfy.push({
             tags: 'battery,red_circle',
             title: `${ENV_NAME} Power`,
@@ -55,6 +57,6 @@ powerStatusEmitter.on('status:change', async ({ status }) => {
     }
 });
 
-export const energyRunner = async () => {
+export const energyRunner = buildRunner(FEATURE_KEY, async () => {
     await monitorPowerStatus();
-};
+});

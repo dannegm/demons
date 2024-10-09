@@ -1,12 +1,15 @@
 import dns from 'dns';
 import EventEmitter from 'events';
 import { AbortController } from 'abort-controller';
-import { retry } from '@/helpers/handlers';
 import ntfy from '@/services/ntfy';
-import { logger } from '@/services/logger';
+import { buildCustomLogger } from '@/services/logger';
+import { retry } from '@/helpers/handlers';
+import { buildRunner } from '@/helpers/builders';
 
 const ENV_NAME = process.env.ENV_NAME;
-const LOGGER_TAG = 'INTERNET';
+const FEATURE_KEY = 'demon.internet';
+
+const logger = buildCustomLogger('internet');
 
 export const internetStatusEmitter = new EventEmitter();
 
@@ -44,7 +47,7 @@ const monitorInternetConnection = async () => {
 
 internetStatusEmitter.on('status:change', async ({ status }) => {
     if (status) {
-        logger.demon(LOGGER_TAG, 'Internet connected');
+        logger.info('Internet connected');
         retry(
             () =>
                 ntfy.push({
@@ -55,10 +58,10 @@ internetStatusEmitter.on('status:change', async ({ status }) => {
             { delay: 1000 },
         );
     } else {
-        logger.demon(LOGGER_TAG, 'Internet disconnected');
+        logger.error('Internet disconnected');
     }
 });
 
-export const internetRunner = async () => {
+export const internetRunner = buildRunner(FEATURE_KEY, async () => {
     await monitorInternetConnection();
-};
+});

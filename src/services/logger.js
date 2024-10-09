@@ -1,66 +1,61 @@
 import { createLogger, format, transports, addColors } from 'winston';
+import { upperCase, kebabCase } from 'lodash';
+import clc from 'cli-color';
 
 const customLevels = {
     levels: {
         error: 0,
         warn: 1,
-        info: 2,
-        demon: 3,
-        command: 4,
+        success: 3,
+        info: 4,
+        debug: 5,
+        verbose: 6,
+        silly: 6,
     },
     colors: {
         error: 'red',
         warn: 'yellow',
-        info: 'blue',
-        demon: 'magenta',
-        command: 'cyan',
+        success: 'green',
+        info: 'cyan',
+        debug: 'gray',
+        verbose: 'gray',
+        silly: 'gray',
     },
 };
 
 addColors(customLevels.colors);
 
-const logger = createLogger({
-    levels: customLevels.levels,
-    format: format.combine(format.timestamp(), format.json()),
-    transports: [
-        new transports.Console({
-            level: 'demon',
-            format: format.combine(format.colorize(), format.simple()),
-        }),
-        new transports.Console({
-            level: 'command',
-            format: format.combine(format.colorize(), format.simple()),
-        }),
-        new transports.File({
-            filename: 'logs/demon.log',
-            level: 'demon',
-            format: format.combine(format.timestamp(), format.json()),
-        }),
-        new transports.File({
-            filename: 'logs/command.log',
-            level: 'command',
-            format: format.combine(format.timestamp(), format.json()),
-        }),
-        new transports.File({
-            filename: 'logs/app.log',
-            level: 'info',
-            format: format.combine(format.timestamp(), format.json()),
-        }),
-        new transports.File({
-            filename: 'logs/error.log',
-            level: 'error',
-            format: format.combine(format.timestamp(), format.json()),
-        }),
-    ],
-});
+const consoleFormat = (tag = 'logger') =>
+    format.printf(({ level, message }) => {
+        const coloredTag = clc.magenta(`[${upperCase(tag)}]`);
+        const timestamp = new Date().toISOString();
+        return `${clc.blackBright(timestamp)} ${coloredTag} ${level}: ${message}`;
+    });
 
-const buildCustomLogger = level => {
-    return (tag, ...args) => {
-        logger.log('demon', `[${tag}] ${args.map(s => s.toString()).join(' - ')}`);
-    };
+const buildCustomLogger = tag => {
+    const filename = kebabCase(tag);
+
+    return createLogger({
+        levels: customLevels.levels,
+        transports: [
+            new transports.Console({
+                level: 'info',
+                format: format.combine(format.colorize(), consoleFormat(tag)),
+            }),
+            new transports.File({
+                filename: `logs/${filename}.log`,
+                level: 'info',
+                format: format.combine(format.timestamp(), format.json()),
+            }),
+            new transports.File({
+                filename: `logs/${filename}.error.log`,
+                level: 'error',
+                format: format.combine(format.timestamp(), format.json()),
+            }),
+        ],
+    });
 };
 
-logger.demon = buildCustomLogger('demon');
-logger.command = buildCustomLogger('command');
+const logger = buildCustomLogger('app');
 
-export { logger };
+export { logger, buildCustomLogger };

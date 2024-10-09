@@ -10,7 +10,7 @@ const withAuth = (event, handler) => {
     const [command, token] = data?.message.split('=').map(s => s.trim());
 
     if (!token) {
-        logger.info('No password');
+        logger.verbose('No password');
         return false;
     }
 
@@ -30,7 +30,7 @@ const withParams = handler => {
 };
 
 const defaultHandler = () => {
-    logger.info('Comando inválido');
+    logger.warn('Comando inválido');
 };
 
 const commandHandlers = {
@@ -42,7 +42,7 @@ export const startListener = () => {
         withAuth(
             event,
             withParams((command, ...args) => {
-                logger.info(`Executando [${command}]`);
+                logger.debug(`Executando [${command}]`);
                 const handler = commandHandlers[command] || defaultHandler;
                 return handler(...args);
             }),
