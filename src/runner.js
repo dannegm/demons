@@ -1,8 +1,7 @@
 import { Cron } from 'croner';
-import { consola } from 'consola';
-import { energyRunner } from './demons/energy/index';
-
-const IS_DEV = process.env.NODE_ENV !== 'production';
+import { logger } from '@/services/logger';
+import { energyRunner } from '@/demons/energy';
+import { internetRunner } from '@/demons/internet';
 
 const cronOptions = {
     paused: true,
@@ -10,11 +9,12 @@ const cronOptions = {
 
 const runner = async () => {
     energyRunner();
+    internetRunner();
 };
 
-const cronJob = Cron('* * * * * *', cronOptions, runner);
+const cronJob = Cron('*/5 * * * * *', cronOptions, runner);
 
 export const startRunner = async () => {
-    console.log('Starting runner...');
+    logger.info('Starting runner...');
     cronJob.resume();
 };

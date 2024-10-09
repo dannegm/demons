@@ -1,11 +1,11 @@
+import { logger } from '@/services/logger';
 import { exec } from 'child_process';
-import { consola } from 'consola';
 
 const IS_DEV = process.env.NODE_ENV !== 'production';
+const ENV_NAME = process.env.ENV_NAME;
+const LOGGER_TAG = 'LOCKSCREEN';
 
-export const lockscreen = () => {
-    consola.log('Pantalla bloqueada.');
-    console.log(process.env.NODE_ENV);
+const lock = () => {
     if (IS_DEV) {
         return;
     }
@@ -14,10 +14,25 @@ export const lockscreen = () => {
         `osascript -e 'tell application "System Events" to key code 12 using {control down, command down}'`,
         error => {
             if (error) {
-                consola.error(`Error al bloquear la pantalla: ${error.message}`);
+                logger.error(`Error locking the screen: ${error.message}`);
             } else {
-                consola.success('Pantalla bloqueada.');
+                logger.command(LOGGER_TAG, 'Screen locked');
             }
         },
     );
+};
+
+export const lockscreen = (env = 'all') => {
+    logger.command(LOGGER_TAG, 'Locking screen');
+    logger.command(LOGGER_TAG, 'Env', env);
+
+    if (env === 'all') {
+        logger.command(LOGGER_TAG, 'Locking all computers');
+        return lock();
+    }
+
+    if (env === ENV_NAME) {
+        logger.command(LOGGER_TAG, `Locking ${env}`);
+        return lock();
+    }
 };

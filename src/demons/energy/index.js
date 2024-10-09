@@ -1,50 +1,60 @@
 import { exec } from 'child_process';
-import { consola } from 'consola';
-import ntfy from '../../ntfy';
+import EventEmitter from 'events';
+import ntfy from '@/services/ntfy';
+import { logger } from '@/services/logger';
 
-let lastStatus = null;
+const ENV_NAME = process.env.ENV_NAME;
+const LOGGER_TAG = 'ENERGY';
 
-const checkPowerStatus = handler => {
-    exec('pmset -g batt', (error, stdout, stderr) => {
-        if (error) {
-            consola.error(`Error: ${error.message}`);
-            return;
-        }
-        if (stderr) {
-            consola.error(`Stderr: ${stderr}`);
-            return;
-        }
+export const powerStatusEmitter = new EventEmitter();
 
-        const isConnectedToPower = stdout.includes('AC Power');
-        if (lastStatus === null) {
-            lastStatus = isConnectedToPower;
-        }
+let previousStatus = null;
 
-        if (lastStatus !== isConnectedToPower) {
-            lastStatus = isConnectedToPower;
-            handler(isConnectedToPower);
-        }
+const checkPowerStatus = () => {
+    return new Promise((resolve, reject) => {
+        exec('pmset -g batt', (error, stdout, stderr) => {
+            if (error) {
+                logger.error(LOGGER_TAG, error.message);
+                return reject(error);
+            }
+            if (stderr) {
+                logger.error(LOGGER_TAG, `Stderr: ${stderr}`);
+                return reject(stderr);
+            }
+
+            const isConnectedToPower = stdout.includes('AC Power');
+            resolve(isConnectedToPower);
+        });
     });
 };
 
-const onPowerChange = async isConnectedToPower => {
-    if (isConnectedToPower) {
-        consola.info('Power connected.');
-        await ntfy.push({
-            tags: 'battery,green_circle',
-            title: 'Macbook Power',
-            message: 'Macbook conectada a la corriente elétrica',
-        });
-    } else {
-        consola.info('Power disconnected.');
-        await ntfy.push({
-            tags: 'battery,red_circle',
-            title: 'Macbook Power',
-            message: 'Macbook desconectada a la corriente elétrica',
-        });
+const monitorPowerStatus = async () => {
+    const currentStatus = await checkPowerStatus();
+
+    if (currentStatus !== previousStatus) {
+        previousStatus = currentStatus;
+        powerStatusEmitter.emit('status:change', { status: currentStatus });
     }
 };
 
+powerStatusEmitter.on('status:change', async ({ status }) => {
+    if (status) {
+        logger.demon(LOGGER_TAG, 'Power connected.');
+        await ntfy.push({
+            tags: 'battery,green_circle',
+            title: `${ENV_NAME} Power`,
+            message: 'Macbook conectada a la corriente elétrica',
+        });
+    } else {
+        logger.demon(LOGGER_TAG, 'Power disconnected.');
+        await ntfy.push({
+            tags: 'battery,red_circle',
+            title: `${ENV_NAME} Power`,
+            message: 'Macbook desconectada a la corriente elétrica',
+        });
+    }
+});
+
 export const energyRunner = async () => {
-    checkPowerStatus(onPowerChange);
+    await monitorPowerStatus();
 };

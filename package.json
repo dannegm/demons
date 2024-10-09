@@ -14,6 +14,7 @@
         "@babel/core": "^7.25.2",
         "@babel/node": "^7.25.0",
         "@babel/preset-env": "^7.25.4",
+        "abort-controller": "^3.0.0",
         "axios": "^1.7.7",
         "babel-plugin-module-resolver": "^5.0.2",
         "consola": "^3.2.3",
@@ -22,8 +23,10 @@
         "eventsource": "^2.0.2",
         "nodemon": "^3.1.7",
         "otpauth": "^9.3.4",
+        "plop": "^4.0.1",
         "pm2": "^5.4.2",
-        "prettier": "^3.3.3"
+        "prettier": "^3.3.3",
+        "winston": "^3.15.0"
     },
     "engines": {
         "node": "20.12.2",

@@ -1,9 +1,7 @@
-import { consola } from 'consola';
-
-import { totp } from './security';
-import { lockscreen } from './demons/lockscreen';
-
-import ntfy from './ntfy';
+import ntfy from '@/services/ntfy';
+import { totp } from '@/services/security';
+import { lockscreen } from '@/demons/lockscreen';
+import { logger } from './services/logger';
 
 // curl -d "command" ntfy.sh/APP_TOPIC
 
@@ -12,20 +10,27 @@ const withAuth = (event, handler) => {
     const [command, token] = data?.message.split('=').map(s => s.trim());
 
     if (!token) {
-        consola.error('No password');
+        logger.info('No password');
         return false;
     }
 
     if (totp.validate({ token, window: 1 }) !== 0) {
-        consola.error('Invalid OTP');
+        logger.error('Invalid OTP');
         return false;
     }
 
     return handler(command, event);
 };
 
+const withParams = handler => {
+    return command => {
+        const [cmd, ...args] = command.split('::');
+        return handler(cmd, ...args);
+    };
+};
+
 const defaultHandler = () => {
-    consola.log('Comando inválido');
+    logger.info('Comando inválido');
 };
 
 const commandHandlers = {
@@ -34,10 +39,13 @@ const commandHandlers = {
 
 export const startListener = () => {
     ntfy.onMessage(event => {
-        withAuth(event, command => {
-            consola.info(`Executando [${command}]`);
-            const handler = commandHandlers[command] || defaultHandler;
-            return handler();
-        });
+        withAuth(
+            event,
+            withParams((command, ...args) => {
+                logger.info(`Executando [${command}]`);
+                const handler = commandHandlers[command] || defaultHandler;
+                return handler(...args);
+            }),
+        );
     });
 };
