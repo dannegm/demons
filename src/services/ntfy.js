@@ -18,15 +18,15 @@ class Ntfy {
     async push({ title, message, tags }) {
         logger.debug(`Sending: ${title}`);
         try {
-            const title = title || 'DNN Demons';
+            const fallbackTitle = title || 'DNN Demons';
             await axios.post(this.ntfyUrl, message, {
                 headers: {
-                    Title: title,
+                    Title: fallbackTitle,
                     Tags: tags || 'white_circle',
                     Markdown: 'yes',
                 },
             });
-            logger.success(`Sent: ${title} | ${message}`);
+            logger.success(`Sent: ${fallbackTitle} | ${message}`);
         } catch (err) {
             logger.error('Error sending notification', err);
         }
