@@ -1,6 +1,7 @@
 import ntfy from '@/services/ntfy';
 import { totp } from '@/services/security';
 import { lockscreen } from '@/demons/lockscreen';
+import { requestBook } from '@/demons/bookworms';
 import { logger } from './services/logger';
 
 // curl -d "command" ntfy.sh/APP_TOPIC
@@ -35,6 +36,7 @@ const defaultHandler = () => {
 
 const commandHandlers = {
     lockscreen,
+    requestBook,
 };
 
 export const startListener = () => {

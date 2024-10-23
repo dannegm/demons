@@ -5,9 +5,9 @@ import ntfy from '@/services/ntfy';
 import { buildCustomLogger } from '@/services/logger';
 import { retry } from '@/helpers/handlers';
 import { buildRunner } from '@/helpers/builders';
+import { debounce } from 'lodash';
 
 const ENV_NAME = process.env.ENV_NAME;
-const FEATURE_KEY = 'demon.internet';
 
 const logger = buildCustomLogger('internet');
 
@@ -45,23 +45,27 @@ const monitorInternetConnection = async () => {
     }
 };
 
+const sendNotification = debounce(() => {
+    retry(
+        () =>
+            ntfy.push({
+                tags: 'globe_with_meridians,green_circle',
+                title: `${ENV_NAME} Internet`,
+                message: 'Macbook conectada a internet',
+            }),
+        { delay: 1000 },
+    );
+}, 60 * 1000);
+
 internetStatusEmitter.on('status:change', async ({ status }) => {
     if (status) {
         logger.info('Internet connected');
-        retry(
-            () =>
-                ntfy.push({
-                    tags: 'globe_with_meridians,green_circle',
-                    title: `${ENV_NAME} Internet`,
-                    message: 'Macbook conectada a internet',
-                }),
-            { delay: 1000 },
-        );
+        sendNotification();
     } else {
         logger.error('Internet disconnected');
     }
 });
 
-export const internetRunner = buildRunner(FEATURE_KEY, async () => {
+export const internetRunner = buildRunner('demon.internet', async () => {
     await monitorInternetConnection();
 });

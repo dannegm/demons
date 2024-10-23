@@ -13,3 +13,11 @@ export const retry = async (promiseFunc, { retries = 5, delay = 0 } = {}) => {
         }
     }
 };
+
+export const debounce = (func, delay = 300) => {
+    let timeoutId;
+    return (...args) => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => func(...args), delay);
+    };
+};

@@ -5,7 +5,6 @@ import { buildCustomLogger } from '@/services/logger';
 import { buildRunner } from '@/helpers/builders';
 
 const ENV_NAME = process.env.ENV_NAME;
-const FEATURE_KEY = 'demon.energy';
 const logger = buildCustomLogger('energy');
 
 export const powerStatusEmitter = new EventEmitter();
@@ -57,6 +56,6 @@ powerStatusEmitter.on('status:change', async ({ status }) => {
     }
 });
 
-export const energyRunner = buildRunner(FEATURE_KEY, async () => {
+export const energyRunner = buildRunner('demon.energy', async () => {
     await monitorPowerStatus();
 });

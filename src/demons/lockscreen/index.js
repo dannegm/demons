@@ -4,7 +4,6 @@ import { buildHandler } from '@/helpers/builders';
 
 const IS_DEV = process.env.NODE_ENV === 'development';
 const ENV_NAME = process.env.ENV_NAME;
-const FEATURE_KEY = 'command.lockscreen';
 const logger = buildCustomLogger('lockscreen');
 
 const lock = () => {
@@ -24,7 +23,7 @@ const lock = () => {
     );
 };
 
-export const lockscreen = buildHandler(FEATURE_KEY, (env = 'all') => {
+export const lockscreen = buildHandler('command.lockscreen', (env = 'all') => {
     logger.info('Locking screen');
     logger.verbose('Env', env);
 
