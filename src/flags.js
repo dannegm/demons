@@ -4,4 +4,5 @@ export const features = {
     'demon.internet': true,
     'command.lockscreen': true,
     'command.bookworms': true,
+    'command.pingpong': true,
 };
