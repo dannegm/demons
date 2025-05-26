@@ -2,9 +2,10 @@ import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import EventEmitter from 'events';
 
-import ntfy from '@/services/ntfy';
+import EventEmitter from 'events';
+import axios from 'axios';
+
 import { buildCustomLogger } from '@/services/logger';
 import { supabase } from '@/services/supabase';
 import { buildHandler, buildRunner } from '@/helpers/builders';
@@ -109,20 +110,18 @@ const monitorBucketStatus = async () => {
     }
 };
 
+const bookwormsApi = axios.create({
+    baseURL: 'https://endpoints.hckr.mx/bookworms',
+    headers: {
+        'x-dnn-apikey': '6hcfpDiklavXpjvOo8JXeaXV9qTZiWDt',
+    },
+});
+
 bucketStatusEmitter.on('status:change', async ({ status }) => {
-    if (status) {
-        await ntfy.push({
-            tags: 'books,green_circle',
-            title: `Bookworms`,
-            message: `${bucketName}.bucket.status::online`,
-        });
-    } else {
-        await ntfy.push({
-            tags: 'books,red_circle',
-            title: `Bookworms`,
-            message: `${bucketName}.bucket.status::offline`,
-        });
-    }
+    logger.info(`Bucket status changed: ${status ? 'Online' : 'Offline'}`);
+    await bookwormsApi.put('/settings', {
+        'bucket.online': status,
+    });
 });
 
 export const bookwormsRunner = buildRunner(`demon.${bucketName}`, async () => {
