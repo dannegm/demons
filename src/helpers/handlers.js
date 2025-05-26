@@ -21,3 +21,12 @@ export const debounce = (func, delay = 300) => {
         timeoutId = setTimeout(() => func(...args), delay);
     };
 };
+
+export const tryCatch = async promise => {
+    try {
+        const res = await promise;
+        return [res, null];
+    } catch (err) {
+        return [null, err];
+    }
+};

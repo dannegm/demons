@@ -2,6 +2,7 @@ import { Cron } from 'croner';
 import { logger } from '@/services/logger';
 import { energyRunner } from '@/demons/energy';
 import { internetRunner } from '@/demons/internet';
+import { bookwormsRunner } from './demons/bookworms/index';
 
 const cronOptions = {
     paused: true,
@@ -10,6 +11,7 @@ const cronOptions = {
 const runner = async () => {
     energyRunner();
     internetRunner();
+    bookwormsRunner();
 };
 
 const cronJob = Cron('*/5 * * * * *', cronOptions, runner);
