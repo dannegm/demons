@@ -83,6 +83,7 @@ export const requestBook = buildHandler('command.bookworms', async (filename, fo
 
     if (error) {
         logger.error('Error uploading file');
+        logger.error(error.message);
         return;
     }
 
