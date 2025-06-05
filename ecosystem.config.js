@@ -3,7 +3,7 @@ module.exports = {
         {
             name: 'demons',
             script: './build',
-            cron_restart: "0 */6 * * *",
+            cron_restart: "0 */3 * * *",
             interpreter: 'node',
             interpreter_args: '-r dotenv/config',
             watch: false,

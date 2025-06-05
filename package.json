@@ -8,7 +8,8 @@
         "format": "prettier . --write --log-level=warn",
         "build": "yarn prebuild; npx babel src --out-dir ./build",
         "start": "node ./build",
-        "demon": "pm2 start ecosystem.config.js --env production"
+        "demon": "pm2 start ecosystem.config.js --env production",
+        "restart": "pm2 stop all && yarn demon"
     },
     "dependencies": {
         "@babel/cli": "^7.25.6",
