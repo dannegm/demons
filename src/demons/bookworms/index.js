@@ -120,9 +120,14 @@ const bookwormsApi = axios.create({
 
 bucketStatusEmitter.on('status:change', async ({ status }) => {
     logger.info(`Bucket status changed: ${status ? 'Online' : 'Offline'}`);
-    await bookwormsApi.put('/settings', {
-        'bucket.online': status,
-    });
+
+    try {
+        await bookwormsApi.put('/settings', {
+            'bucket.online': status,
+        });
+    } catch (err) {
+        logger.error('No internet connection, unable to update');
+    }
 });
 
 export const bookwormsRunner = buildRunner(`demon.${bucketName}`, async () => {

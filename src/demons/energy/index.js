@@ -3,24 +3,23 @@ import EventEmitter from 'events';
 import ntfy from '@/services/ntfy';
 import { buildCustomLogger } from '@/services/logger';
 import { buildRunner } from '@/helpers/builders';
+import { flags } from '@/services/flags';
 
 const ENV_NAME = process.env.ENV_NAME;
 const logger = buildCustomLogger('energy');
 
 export const powerStatusEmitter = new EventEmitter();
 
-let previousStatus = null;
-
 const checkPowerStatus = () => {
     return new Promise((resolve, reject) => {
         exec('pmset -g batt', (error, stdout, stderr) => {
             if (error) {
                 logger.error(error.message);
-                return reject(error);
+                return reject(false);
             }
             if (stderr) {
                 logger.error(`Stderr: ${stderr}`);
-                return reject(stderr);
+                return reject(false);
             }
 
             const isConnectedToPower = stdout.includes('AC Power');
@@ -30,10 +29,11 @@ const checkPowerStatus = () => {
 };
 
 const monitorPowerStatus = async () => {
+    const previousStatus = await flags.getFlag('state.energy');
     const currentStatus = await checkPowerStatus();
 
     if (currentStatus !== previousStatus) {
-        previousStatus = currentStatus;
+        await flags.setFlag('state.energy', currentStatus);
         powerStatusEmitter.emit('status:change', { status: currentStatus });
     }
 };

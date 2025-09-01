@@ -1,19 +1,19 @@
 import dns from 'dns';
 import EventEmitter from 'events';
+import { debounce } from 'lodash';
 import { AbortController } from 'abort-controller';
+
 import ntfy from '@/services/ntfy';
 import { buildCustomLogger } from '@/services/logger';
 import { retry } from '@/helpers/handlers';
 import { buildRunner } from '@/helpers/builders';
-import { debounce } from 'lodash';
+import { flags } from '@/services/flags';
 
 const ENV_NAME = process.env.ENV_NAME;
 
 const logger = buildCustomLogger('internet');
 
 export const internetStatusEmitter = new EventEmitter();
-
-let previousStatus = null;
 
 const checkInternetConnection = (timeout = 3000) => {
     return new Promise(resolve => {
@@ -37,10 +37,11 @@ const checkInternetConnection = (timeout = 3000) => {
 };
 
 const monitorInternetConnection = async () => {
+    const previousStatus = await flags.getFlag('state.internet');
     const currentStatus = await checkInternetConnection();
 
     if (currentStatus !== previousStatus) {
-        previousStatus = currentStatus;
+        await flags.setFlag('state.internet', currentStatus);
         internetStatusEmitter.emit('status:change', { status: currentStatus });
     }
 };
